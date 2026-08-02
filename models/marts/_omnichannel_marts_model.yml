@@ -1,0 +1,87 @@
+version: 2
+
+models:
+  - name: dim_channels
+    config:
+      materialized: table
+    columns:
+      - name: sk_channel
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_products
+    config:
+      materialized: table
+    columns:
+      - name: sk_product
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_customers
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: Conformed date dimension, generated via dbt_date for 2022-01-01 to 2024-12-31, matching the project's data window.
+    config:
+      materialized: table
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_purchase_history
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: sk_customer
+      - name: sk_channel
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_channels')
+              field: sk_channel
+      - name: sk_product
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: sk_product
+      - name: mtr_total_amount_net
+        tests:
+          - not_null
+
+  - name: fct_visit_history
+    description: >
+      Visit-grain engagement fact — one row per customer visit to a channel,
+      joined to dim_customers and dim_channels. Answers the website/app
+      performance business process. flg_is_bounce is true when
+      bounce_timestamp is null (no further engagement recorded).
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: sk_customer
+      - name: sk_channel
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_channels')
+              field: sk_channel
