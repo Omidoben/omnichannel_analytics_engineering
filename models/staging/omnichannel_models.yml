@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Staged customer records, one row per customer, straight from source with no transformation beyond column selection.
+    config:
+      materialized: view
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: email_address
+        tests:
+          - unique
+  - name: stg_products
+    description: Staged product records, one row per product
+    config:
+      materialized: view
+    columns:
+      - name: product_sku
+        tests:
+          - unique
+          - not_null
+      - name: unit_price
+        tests:
+          - not_null
+  - name: stg_channels
+    description: Staged channel records, one row per channel
+    config:
+      materialized: view
+    columns:
+      - name: channel_id
+        tests:
+          - unique
+          - not_null
+      - name: channel_name
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Website", "Mobile App", "Instagram"]
+  - name: stg_purchase_history
+    description: Staged purchase transaction line items — one row per purchase.
+    config:
+      materialized: view
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: product_sku
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_sku
+      - name: channel_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_channels')
+              field: channel_id
+      - name: quantity
+        tests:
+          - not_null
+      - name: orderdate
+        tests:
+          - not_null
+  - name: stg_visit_history
+    description: Staged visit records, one row per customer visit to a channel.
+    config:
+      materialized: view
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: channel_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_channels')
+              field: channel_id
+      - name: visit_timestamp
+        tests:
+          - not_null

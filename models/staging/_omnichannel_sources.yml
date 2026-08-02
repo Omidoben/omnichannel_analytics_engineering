@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: omnichannel
+    database: omnichannel-dbt-analytics
+    schema: omnichannel_raw
+    description: >
+      Raw operational data landed from the MySQL omni_management database via the mysql_to_bigquery.py ETL script.
+    loader: custom Python script (mysql-connector-python + google-cloud-bigquery)
+    tables:
+      - name: customers
+        description: One row per customer, loaded from the customers table in MySQL.
+        freshness:
+          warn_after:
+            count: 24
+            period: hour
+          error_after:
+            count: 48
+            period: hour
+        loaded_at_field: updated_at
+      - name: products
+        description: One row per product, loaded from the products table in MySQL.
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+      - name: channels
+        description: One row per sales/marketing channel (Website, Mobile App, Instagram).
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+
+      - name: purchasehistory
+        description: >
+          One row per purchase transaction line item.
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+
+      - name: visithistory
+        description: >
+          One row per customer visit to a channel.
+        loaded_at_field: updated_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
