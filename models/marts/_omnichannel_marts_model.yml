@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  - name: dim_channels
+    description: Conformed channel dimension, one row per channel, shared by both fact tables
+    config:
+      materialized: table
+    columns:
+      - name: sk_channel
+        description: Surrogate key of the channel dimension
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_products
+    description: Product dimension, one row per product, used only by fct_purchase_history.
+    config:
+      materialized: table
+    columns:
+      - name: sk_product
+        description: Surrogate key of the products dimension
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_customers
+    description: Conformed customer dimension — one row per customer, shared by both fact tables.
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        description: Surrogate key of the customers table
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: Conformed date dimension, generated via dbt_date for 2022-01-01 to 2024-12-31, matching the project's data window.
+    config:
+      materialized: table
+    columns:
+      - name: date_day
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_purchase_history
+    description: >
+      Transaction-grain sales fact — one row per purchase line item, joined
+      to dim_customers, dim_channels, and dim_products. Answers the sales
+      tracking business process.
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        description: Surrogate key for the customer dimension.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: sk_customer
+      - name: sk_channel
+        description: Surrogate key for the channel dimension.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_channels')
+              field: sk_channel
+      - name: sk_product
+        description: Surrogate key for the product dimension.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: sk_product
+      - name: mtr_total_amount_net
+        tests:
+          - not_null
+
+  - name: fct_visit_history
+    description: >
+      Visit-grain engagement fact, one row per customer visit to a channel,
+      joined to dim_customers and dim_channels. Answers the website/app
+      performance business process. flg_is_bounce is true when
+      bounce_timestamp is null (no further engagement recorded).
+    config:
+      materialized: table
+    columns:
+      - name: sk_customer
+        description: Surrogate key for the customer dimension.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: sk_customer
+      - name: sk_channel
+        description: Surrogate key for the channel dimension.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_channels')
+              field: sk_channel
