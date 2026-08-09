@@ -11,9 +11,12 @@ with
             -- bounce_timestamp is NULL when a visit bounced (single-touch, no
             -- further engagement to timestamp). It is populated only when the
             -- visit was engaged, recording when that engagement ended.
-            case when bounce_timestamp is null then true else false end as flg_is_bounce
+            case
+                when bounce_timestamp is null then true else false
+            end as flg_is_bounce,
+            flg_converted
 
-        from {{ ref("stg_visit_history") }}
+        from {{ ref("int_visit_conversions") }}
 
     )
 
@@ -25,6 +28,7 @@ select
     fct.dt_visit_timestamp,
     fct.dt_bounce_timestamp,
     fct.flg_is_bounce,
+    fct.flg_converted,
     -- Only meaningful for engaged (non-bounced) visits; null for bounces,
     -- since there is no engagement duration to measure.
     timestamp_diff(
