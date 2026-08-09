@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: int_customer_segments
+    description: >
+      One row per customer with a purchase history, bucketed into a segment
+      (VIP/Regular/Occasional/One-time) by total order count. Built from
+      staging (not fct_purchase_history) to avoid a circular dependency with
+      dim_customers, which consumes this model.
+    config: 
+      materialized: view
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_segment
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['VIP', 'Regular', 'Occasional', 'One-time']
+ 
+  - name: int_visit_conversions
+    description: >
+      One row per visit (same grain as stg_visit_history) with an added
+      flg_converted flag — true if the same customer purchased on the same
+      channel on the same calendar day. A best-effort proxy in the absence
+      of a shared transaction key between visits and purchases.
+    config:
+      materialized: view
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+      - name: channel_id
+        tests:
+          - not_null
+      - name: flg_converted
+        tests:
+          - not_null
+ 
+          

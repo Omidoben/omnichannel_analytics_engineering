@@ -33,6 +33,16 @@ models:
         tests:
           - unique
           - not_null
+      - name: dsc_customer_segment
+        description: >
+          Derived segment (VIP/Regular/Occasional/One-time/No Purchases),
+          sourced from int_customer_segments. Resolves the Customer Segment
+          Mix KPI gap flagged in charter Section 7.5.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                ["VIP", "Regular", "Occasional", "One-time", "No Purchases"]
 
   - name: dim_date
     description: Conformed date dimension, generated via dbt_date for 2022-01-01 to 2024-12-31, matching the project's data window.
@@ -100,3 +110,12 @@ models:
           - relationships:
               to: ref('dim_channels')
               field: sk_channel
+      - name: flg_converted
+        description: >
+          True if the same customer purchased on the same channel on the
+          same calendar day as this visit (best-effort proxy, no shared
+          transaction key exists between visits and purchases). Resolves
+          the Visit-to-Purchase Conversion Rate KPI gap flagged in charter
+          Section 7.5.
+        tests:
+          - not_null
