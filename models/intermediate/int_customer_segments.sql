@@ -30,7 +30,7 @@ select
         when total_orders >= 5
         then 'Regular'
         when total_orders >= 2
-        then 'Occassional'
+        then 'Occasional'
         else 'One-time'
     end as customer_segment
 from customer_purchase_counts
